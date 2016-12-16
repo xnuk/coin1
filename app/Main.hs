@@ -1,25 +1,62 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PackageImports, OverloadedStrings, NoImplicitPrelude #-}
 
 module Main (main) where
 
-import Prelude hiding (log, takeWhile, putStrLn, min, max, unwords, lines)
+import Prelude ((-), (+), div, mod)
 
-import Network.Socket (close, connect, socket, getAddrInfo, defaultHints, SocketType(Stream), AddrInfo(..))
-import Data.ByteString (ByteString)
-import Data.ByteString.Char8 (pack, unpack, unwords, putStrLn)
-import Data.Conduit.Network (sourceSocket, sinkSocket)
-import Data.Conduit.Binary (lines)
-import Data.Conduit ((=$=), ($$), (.|), Conduit, await, yield, runConduit)
-import Data.Conduit.Lift (stateLC, evalStateLC)
-import qualified Data.Conduit.List as C
-import Data.Monoid ((<>))
-import Data.Attoparsec.ByteString (string, Parser, takeWhile1, takeByteString, parseOnly)
+import Data.Ord ((<=))
+import Data.Eq (Eq, (==))
+
+import Data.Either (Either(Left, Right))
+import Data.Maybe (Maybe(Just, Nothing))
+import Data.Int (Int)
+import Data.Bool (Bool, (&&))
+import Data.Word (Word8)
+
+import System.IO (IO, print)
+
+import Text.Read (Read, read)
+import Text.Show (Show, show)
+
 import Control.Applicative ((<|>))
-import Control.Monad.Trans.State.Lazy (StateT)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad (join)
+import Control.Monad (join, (>>), return)
+import Data.Functor (fmap, (<$>))
+import Data.Monoid ((<>))
+import Data.Function ((.), ($))
 
-data Cmd a = Problem a a | Answer a | Log ByteString
+import "base" Control.Monad.IO.Class (liftIO)
+
+import "bytestring" Data.ByteString (ByteString)
+import "bytestring" Data.ByteString.Char8
+    ( pack, unpack
+    , unwords
+    , putStrLn, getLine
+    )
+
+import "attoparsec" Data.Attoparsec.ByteString
+    ( Parser, parseOnly
+    , string, takeWhile1, takeByteString
+    )
+
+import "conduit" Data.Conduit
+    ( Conduit
+    , (=$=), ($$), await, yield
+    )
+import "conduit" Data.Conduit.Lift (stateLC, evalStateLC)
+import "transformers" Control.Monad.Trans.State.Lazy (StateT)
+
+import qualified "conduit" Data.Conduit.List as C
+
+import "conduit-extra" Data.Conduit.Binary (lines)
+import "conduit-extra" Data.Conduit.Network (sourceSocket, sinkSocket)
+
+import "network" Network.Socket
+    ( AddrInfo(addrFamily, addrSocketType, addrProtocol, addrAddress)
+    , getAddrInfo, defaultHints, SocketType(Stream)
+    , close, connect, socket
+    )
+
+data Cmd a = Problem a a | Answer a | Log ByteString deriving (Show, Eq)
 
 toMaybe :: Either a b -> Maybe b
 toMaybe (Left _) = Nothing
@@ -40,7 +77,7 @@ main = do
 
     getLine >> close sock
 
-isDigit :: Integral a => a -> Bool
+isDigit :: Word8 -> Bool
 isDigit x = 0x30 <= x && x <= 0x39
  
 question, answer :: Read a => Parser (Cmd a)
@@ -90,5 +127,5 @@ runner = do
                         mid = (min + max) `div` 2
                     in yield (fz min max) >> return ((), (min, mid, max))
 
-fz :: (Show a, Enum a) => a -> a -> ByteString
-fz min max = (unwords . map (pack . show) $ [min .. max]) <> "\n"
+fz :: Int -> Int -> ByteString
+fz min max = (unwords . fmap (pack . show) $ [min .. max]) <> "\n"
