@@ -1,4 +1,4 @@
-Solution of [pwnable.kr](http://pwnable.kr)'s `coin1`, which tries to use, um, [`conduit`](https://www.stackage.org/package/conduit). Does not working yet.
+Solution of [pwnable.kr](http://pwnable.kr)'s `coin1`, which tries to use, um, [`conduit`](https://www.stackage.org/package/conduit). *spoiler may be included*
 
 ## What is the `coin1`?
 Here's the contents of `nc pwnable.kr 9007`:
